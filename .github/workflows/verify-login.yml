@@ -37,10 +37,24 @@ jobs:
           pwsh login_test/show_login.ps1
           Add-Content -Path "C:\temp\verify_login_result.txt" -Value "PowerShell script finished: $(Get-Date)"
 
+      - name: Write status file
+        shell: pwsh
+        run: |
+          Set-Content -Path "C:\temp\verify_login_status.txt" -Value "✅ All scripts ran successfully and server is connected as of $(Get-Date)"
+
       - name: Show log file contents
         shell: pwsh
         run: |
           Get-Content "C:\temp\verify_login_result.txt"
+          Get-Content "C:\temp\verify_login_status.txt"
 
-      - name: All scripts completed
-        run: echo "✅ All login scripts ran successfully!"
+      - name: Upload log and status files
+        uses: actions/upload-artifact@v3
+        with:
+          name: verify-login-logs
+          path: |
+            C:\temp\verify_login_result.txt
+            C:\temp\verify_login_status.txt
+
+      - name: ✅ Connection and Scripts OK
+        run: echo "✅ All scripts completed successfully and server is connected!"
