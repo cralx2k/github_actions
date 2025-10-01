@@ -18,13 +18,24 @@ jobs:
         shell: pwsh
         run: |
           python login_test/show_login.py
+          echo "Python script finished: $(Get-Date)" >> login_test/result.log
 
       - name: Run Batch login test
         shell: cmd
         run: |
           login_test\show_login.bat
+          echo Batch script finished: %DATE% %TIME% >> login_test\result.log
 
       - name: Run PowerShell login test
         shell: pwsh
         run: |
           pwsh login_test/show_login.ps1
+          "PowerShell script finished: $(Get-Date)" | Out-File -Append login_test/result.log
+
+      - name: Show log file contents
+        shell: pwsh
+        run: |
+          Get-Content login_test/result.log
+
+      - name: All scripts completed
+        run: echo "✅ All login scripts ran successfully!"
