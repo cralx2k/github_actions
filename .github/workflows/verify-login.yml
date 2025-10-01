@@ -49,7 +49,7 @@ jobs:
           Get-Content "C:\temp\verify_login_status.txt"
 
       - name: Upload log and status files
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: verify-login-logs
           path: |
