@@ -1,0 +1,30 @@
+name: Verify Login Scripts
+
+on:
+  push:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+jobs:
+  verify-login:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run Python login test
+        shell: pwsh
+        run: |
+          python login_test/show_login.py
+
+      - name: Run Batch login test
+        shell: cmd
+        run: |
+          login_test\show_login.bat
+
+      - name: Run PowerShell login test
+        shell: pwsh
+        run: |
+          pwsh login_test/show_login.ps1
