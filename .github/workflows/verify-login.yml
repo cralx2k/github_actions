@@ -8,7 +8,7 @@ on:
 
 jobs:
   verify-login:
-    runs-on: windows-latest
+    runs-on: [self-hosted, leaoserver] # Ensure this matches your runner label
 
     steps:
       - name: Create temp folder
@@ -17,44 +17,29 @@ jobs:
           New-Item -ItemType Directory -Force -Path "C:\temp"
 
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Log computer name and timestamp
+        shell: pwsh
+        run: |
+          Add-Content -Path "C:\temp\verify_login_result.txt" -Value "Workflow run on $env:COMPUTERNAME at $(Get-Date)"
 
       - name: Run Python login test
         shell: pwsh
         run: |
           python login_test/show_login.py
-          Add-Content -Path "C:\temp\verify_login_result.txt" -Value "Python script finished: $(Get-Date)"
 
       - name: Run Batch login test
         shell: cmd
         run: |
           login_test\show_login.bat
-          echo Batch script finished: %DATE% %TIME% >> C:\temp\verify_login_result.txt
 
       - name: Run PowerShell login test
         shell: pwsh
         run: |
           pwsh login_test/show_login.ps1
-          Add-Content -Path "C:\temp\verify_login_result.txt" -Value "PowerShell script finished: $(Get-Date)"
-
-      - name: Write status file
-        shell: pwsh
-        run: |
-          Set-Content -Path "C:\temp\verify_login_status.txt" -Value "✅ All scripts ran successfully and server is connected as of $(Get-Date)"
 
       - name: Show log file contents
         shell: pwsh
         run: |
           Get-Content "C:\temp\verify_login_result.txt"
-          Get-Content "C:\temp\verify_login_status.txt"
-
-      - name: Upload log and status files
-        uses: actions/upload-artifact@v4
-        with:
-          name: verify-login-logs
-          path: |
-            C:\temp\verify_login_result.txt
-            C:\temp\verify_login_status.txt
-
-      - name: ✅ Connection and Scripts OK
-        run: echo "✅ All scripts completed successfully and server is connected!"
