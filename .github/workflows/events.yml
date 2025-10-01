@@ -1,0 +1,52 @@
+name: Event Triggers Demo
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - 'feature/**'
+    paths:
+      - '**.py'
+      - 'requirements.txt'
+  pull_request:
+    types: [opened, synchronize, reopened]
+  issues:
+    types: [opened, labeled]
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  event-info:
+    name: Display Event Information
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Print event details
+      run: |
+        echo "Event name: ${{ github.event_name }}"
+        echo "Repository: ${{ github.repository }}"
+        echo "Ref: ${{ github.ref }}"
+        echo "SHA: ${{ github.sha }}"
+        echo "Actor: ${{ github.actor }}"
+        echo "Workflow: ${{ github.workflow }}"
+        echo "Run ID: ${{ github.run_id }}"
+        echo "Run number: ${{ github.run_number }}"
+        
+    - name: Check event type
+      run: |
+        if [ "${{ github.event_name }}" = "push" ]; then
+          echo "This workflow was triggered by a push event"
+        elif [ "${{ github.event_name }}" = "pull_request" ]; then
+          echo "This workflow was triggered by a pull request event"
+        elif [ "${{ github.event_name }}" = "issues" ]; then
+          echo "This workflow was triggered by an issues event"
+        elif [ "${{ github.event_name }}" = "release" ]; then
+          echo "This workflow was triggered by a release event"
+        elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "This workflow was triggered manually"
+        fi

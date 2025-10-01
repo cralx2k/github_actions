@@ -1,0 +1,49 @@
+name: Manual Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+      log_level:
+        description: 'Log level'
+        required: true
+        default: 'info'
+        type: choice
+        options:
+          - debug
+          - info
+          - warning
+          - error
+
+jobs:
+  manual-job:
+    name: Manual Trigger Demo
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Print inputs
+      run: |
+        echo "Environment: ${{ github.event.inputs.environment }}"
+        echo "Log Level: ${{ github.event.inputs.log_level }}"
+        echo "Triggered by: ${{ github.actor }}"
+        
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Run application
+      run: |
+        echo "Running in ${{ github.event.inputs.environment }} environment"
+        python app.py
