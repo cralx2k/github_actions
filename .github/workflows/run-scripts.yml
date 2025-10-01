@@ -1,0 +1,56 @@
+name: Run Scripts with Secrets
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  run-python-script:
+    name: Run Python Script
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      
+      - name: Run Python script
+        env:
+          USERNAME_SECRET: ${{ secrets.USERNAME }}
+          PASSWORD_SECRET: ${{ secrets.PASSWORD }}
+        run: python scripts/sample_script.py
+
+  run-powershell-script:
+    name: Run PowerShell Script
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Run PowerShell script
+        env:
+          USERNAME_SECRET: ${{ secrets.USERNAME }}
+          PASSWORD_SECRET: ${{ secrets.PASSWORD }}
+        run: powershell -File scripts/sample_script.ps1
+
+  run-batch-script:
+    name: Run Batch Script
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Run Batch script
+        env:
+          USERNAME_SECRET: ${{ secrets.USERNAME }}
+          PASSWORD_SECRET: ${{ secrets.PASSWORD }}
+        run: scripts/sample_script.bat
