@@ -11,6 +11,11 @@ jobs:
     runs-on: windows-latest
 
     steps:
+      - name: Create temp folder
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "C:\temp"
+
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -18,24 +23,24 @@ jobs:
         shell: pwsh
         run: |
           python login_test/show_login.py
-          echo "Python script finished: $(Get-Date)" >> login_test/result.log
+          Add-Content -Path "C:\temp\verify_login_result.txt" -Value "Python script finished: $(Get-Date)"
 
       - name: Run Batch login test
         shell: cmd
         run: |
           login_test\show_login.bat
-          echo Batch script finished: %DATE% %TIME% >> login_test\result.log
+          echo Batch script finished: %DATE% %TIME% >> C:\temp\verify_login_result.txt
 
       - name: Run PowerShell login test
         shell: pwsh
         run: |
           pwsh login_test/show_login.ps1
-          "PowerShell script finished: $(Get-Date)" | Out-File -Append login_test/result.log
+          Add-Content -Path "C:\temp\verify_login_result.txt" -Value "PowerShell script finished: $(Get-Date)"
 
       - name: Show log file contents
         shell: pwsh
         run: |
-          Get-Content login_test/result.log
+          Get-Content "C:\temp\verify_login_result.txt"
 
       - name: All scripts completed
         run: echo "✅ All login scripts ran successfully!"
