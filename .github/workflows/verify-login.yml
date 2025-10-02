@@ -1,4 +1,4 @@
-name: Verify Login Scripts
+name: Verify Login Scripts (Batch only)
 
 on:
   push:
@@ -10,14 +10,13 @@ jobs:
   verify-login:
     runs-on: [self-hosted, leaoserver]
 
-    # Passed to all steps (scripts read these)
     env:
-      TARGET_HOST: leaoserver            # change to FQDN or IP if needed
-      TARGET_SHARE: c              # change to an existing share, e.g. Public
-      AUTH_DOMAIN: ""                  # e.g. CORP ; leave empty if not needed
+      TARGET_HOST: leaoserver
+      TARGET_SHARE: c              # <- your working share
+      AUTH_DOMAIN: ""              # e.g., CORP if needed; else ""
       GHA_USERNAME: ${{ secrets.USERNAME }}
       GHA_PASSWORD: ${{ secrets.PASSWORD }}
-      
+
     steps:
       - name: Make log folder (cmd)
         shell: cmd
@@ -26,24 +25,16 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v4
-        
+
+      - name: Reset log file (cmd)
+        shell: cmd
+        run: |
+          > C:\temp\action_log\verify_login_script.txt echo [RUN] %DATE% %TIME% - fresh run
+
       - name: Run Batch login test (pure BAT)
         shell: cmd
         run: login_test\show_login.bat
 
-      - name: Run PowerShell login test
-        shell: PowerShell
-        run: pwsh -File login_test/show_login.ps1
-
-      - name: Ensure Python is available (optional)
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-
-      - name: Run Python login test
-        shell: PowerShell
-        run: python login_test/show_login.py
-
-      - name: Show log file contents
-        shell: PowerShell
-        run: Get-Content "C:\temp\action_log\verify_login_script.txt"
+      - name: Show log file (cmd)
+        shell: cmd
+        run: type C:\temp\action_log\verify_login_script.txt
