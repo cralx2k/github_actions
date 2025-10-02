@@ -1,5 +1,5 @@
 @echo off
-setlocal DisableDelayedExpansion  && rem important for '!' in passwords
+setlocal DisableDelayedExpansion
 setlocal ENABLEEXTENSIONS
 
 set "LOGFILE=C:\temp\action_log\verify_login_script.txt"
@@ -22,9 +22,8 @@ if "%GHA_PASSWORD%"=="" (
 set "USER_FOR_AUTH=%GHA_USERNAME%"
 if not "%DOMAIN%"=="" set "USER_FOR_AUTH=%DOMAIN%\%GHA_USERNAME%"
 
-rem ---- escape password for CMD metacharacters ----
+rem escape metacharacters and quote the password
 set "PWD_SAFE=%GHA_PASSWORD%"
-rem order matters; do '^' first
 set "PWD_SAFE=%PWD_SAFE:^=^^%"
 set "PWD_SAFE=%PWD_SAFE:&=^&%"
 set "PWD_SAFE=%PWD_SAFE:|=^|%"
@@ -32,28 +31,43 @@ set "PWD_SAFE=%PWD_SAFE:<=^<%"
 set "PWD_SAFE=%PWD_SAFE:>=^>%"
 set "PWD_SAFE=%PWD_SAFE:)=^)%"
 set "PWD_SAFE=%PWD_SAFE:(=^(%"
-rem '!' is safe because DelayedExpansion is OFF
 set "PWD_SAFE=%PWD_SAFE:!=^^!%"
 
 echo [BATCH] Local session user: %USERNAME%
 echo [BATCH] Testing SMB auth to \\%HOST%\%SHARE% as %USER_FOR_AUTH%
 
-rem Clear any stale mapping
+rem clear any stale mapping
 net use \\%HOST%\%SHARE% /delete >nul 2>&1
 
-rem Use quotes around the (escaped) password
-net use \\%HOST%\%SHARE% /user:%USER_FOR_AUTH% "%PWD_SAFE%" /persistent:no >nul 2>&1
+rem try the requested share first (show error output if it fails)
+net use \\%HOST%\%SHARE% /user:%USER_FOR_AUTH% "%PWD_SAFE%" /persistent:no
 set "RC=%ERRORLEVEL%"
-
 if %RC% NEQ 0 (
-  echo [BATCH] Auth FAILED to \\%HOST%\%SHARE% (RC=%RC%) >> "%LOGFILE%"
-  echo [BATCH] Auth FAILED (RC=%RC%)
-  exit /b %RC%
+  echo [BATCH] FIRST TRY FAILED (RC=%RC%). Output above shows the reason.
+  echo [BATCH] FIRST TRY FAILED to \\%HOST%\%SHARE% (RC=%RC%) >> "%LOGFILE%"
+
+  rem fallback to IPC$ if it wasn't already
+  if /I not "%SHARE%"=="IPC$" (
+    echo [BATCH] Falling back to \\%HOST%\IPC$
+    net use \\%HOST%\IPC$ /delete >nul 2>&1
+    net use \\%HOST%\IPC$ /user:%USER_FOR_AUTH% "%PWD_SAFE%" /persistent:no
+    set "RC=%ERRORLEVEL%"
+    if %RC% NEQ 0 (
+      echo [BATCH] Fallback to IPC$ FAILED (RC=%RC%). Output above shows the reason.
+      echo [BATCH] Auth FAILED to \\%HOST%\IPC$ (RC=%RC%) >> "%LOGFILE%"
+      exit /b %RC%
+    ) else (
+      echo [BATCH] Auth OK to \\%HOST%\IPC$ >> "%LOGFILE%"
+      net use \\%HOST%\IPC$ /delete >nul 2>&1
+      echo [BATCH] Batch script ran successfully >> "%LOGFILE%"
+      exit /b 0
+    )
+  ) else (
+    exit /b %RC%
+  )
+) else (
+  echo [BATCH] Auth OK to \\%HOST%\%SHARE% >> "%LOGFILE%"
+  net use \\%HOST%\%SHARE% /delete >nul 2>&1
+  echo [BATCH] Batch script ran successfully >> "%LOGFILE%"
+  exit /b 0
 )
-
-rem Cleanup mapping
-net use \\%HOST%\%SHARE% /delete >nul 2>&1
-
-echo [BATCH] Auth OK to \\%HOST%\%SHARE% >> "%LOGFILE%"
-echo [BATCH] Batch script ran successfully >> "%LOGFILE%"
-endlocal

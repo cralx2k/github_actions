@@ -13,8 +13,8 @@ jobs:
     # Passed to all steps (scripts read these)
     env:
       TARGET_HOST: leaoserver            # change to FQDN or IP if needed
-      TARGET_SHARE: Public                # change to an existing share, e.g. Public
-      AUTH_DOMAIN: CORP                    # e.g. CORP ; leave empty if not needed
+      TARGET_SHARE: C$                # change to an existing share, e.g. Public
+      AUTH_DOMAIN: ""                  # e.g. CORP ; leave empty if not needed
       GHA_USERNAME: ${{ secrets.USERNAME }}
       GHA_PASSWORD: ${{ secrets.PASSWORD }}
       
