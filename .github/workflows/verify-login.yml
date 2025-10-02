@@ -19,14 +19,15 @@ jobs:
       GHA_PASSWORD: ${{ secrets.PASSWORD }}
       
     steps:
-      - name: Create temp folder
-        shell: PowerShell
-        run: New-Item -ItemType Directory -Force -Path "C:\temp\action_log\" | Out-Null
+      - name: Make log folder (cmd)
+        shell: cmd
+        run: |
+          if not exist C:\temp\action_log\ mkdir C:\temp\action_log\
 
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Run Batch login test
+        
+      - name: Run Batch login test (pure BAT)
         shell: cmd
         run: login_test\show_login.bat
 
