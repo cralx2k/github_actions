@@ -1,21 +1,13 @@
-name: Verify Login Scripts (BAT→PS + Python)
+name: Verify Login (BAT→PS + Py)
 
 on:
   workflow_dispatch:
   push:
-    branches:
-      - '**'
+    branches: ['**']
 
 jobs:
   verify-login:
     runs-on: [self-hosted, leaoserver]
-
-    env:
-      TARGET_HOST: leaoserver
-      TARGET_SHARE: c
-      AUTH_DOMAIN: ""
-      GHA_USERNAME: ${{ secrets.USERNAME }}
-      GHA_PASSWORD: ${{ secrets.PASSWORD }}
 
     steps:
       - name: Ensure log folder
@@ -27,12 +19,18 @@ jobs:
 
       - name: Reset log
         shell: cmd
-        run: echo [RUN] %DATE% %TIME% - fresh run > C:\temp\action_log\verify_login_script.txt 
+        run:  echo [RUN] %DATE% %TIME% - fresh run > C:\temp\action_log\verify_login_script.txt
 
-      - name: Run Batch (wrapper -> PowerShell)
+      - name: Run login (BAT→PowerShell)
         shell: cmd
-        run: login_test\show_login.bat
         timeout-minutes: 5
+        env:
+          TARGET_HOST: leaoserver
+          TARGET_SHARE: c
+          AUTH_DOMAIN: ""
+          GHA_USERNAME: ${{ secrets.USERNAME }}
+          GHA_PASSWORD: ${{ secrets.PASSWORD }}
+        run: login_test\show_login.bat
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -42,9 +40,9 @@ jobs:
       - name: Run Python login test
         shell: powershell
         env:
-          TARGET_HOST: ${{ env.TARGET_HOST }}
-          TARGET_SHARE: ${{ env.TARGET_SHARE }}
-          AUTH_DOMAIN: ${{ env.AUTH_DOMAIN }}
+          TARGET_HOST: leaoserver
+          TARGET_SHARE: c
+          AUTH_DOMAIN: ""
           GHA_USERNAME: ${{ secrets.USERNAME }}
           GHA_PASSWORD: ${{ secrets.PASSWORD }}
         run: python login_test\show_login.py
