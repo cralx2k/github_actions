@@ -12,13 +12,13 @@ pwd    = os.environ.get("GHA_PASSWORD")
 
 if not user or not pwd:
     with LOGFILE.open("a", encoding="utf-8") as f:
-        if not user: f.write("[PY] ERROR: GHA_USERNAME not set\n")
-        if not pwd:  f.write("[PY] ERROR: GHA_PASSWORD not set\n")
+        if not user: f.write("[PYTHON] ERROR: GHA_USERNAME not set\n")
+        if not pwd:  f.write("[PYTHON] ERROR: GHA_PASSWORD not set\n")
     sys.exit(1)
 
 user_for_auth = f"{domain}\\{user}" if domain else user
-print(f"[PY] Local session user: {os.environ.get('USERNAME') or os.environ.get('USER')}")
-print(f"[PY] Testing SMB auth to: \\\\{host}\\{share} as {user_for_auth}")
+print(f"[PYTHON] Local session user: {os.environ.get('USERNAME') or os.environ.get('USER')}")
+print(f"[PYTHON] Testing SMB auth to: \\\\{host}\\{share} as {user_for_auth}")
 
 def run(cmd):
     return subprocess.run(cmd, capture_output=True, text=True, shell=True)
@@ -32,15 +32,15 @@ rc = map_res.returncode
 
 if rc != 0:
     with LOGFILE.open("a", encoding="utf-8") as f:
-        f.write(f"[PY] Auth FAILED to \\\\{host}\\{share} (RC={rc})\n")
-    print(f"[PY] Auth FAILED (RC={rc})")
+        f.write(f"[PYTHON] Auth FAILED to \\\\{host}\\{share} (RC={rc})\n")
+    print(f"[PYTHON] Auth FAILED (RC={rc})")
     sys.exit(rc)
 
 # Cleanup
 run(f'net use \\\\{host}\\{share} /delete')
 
 with LOGFILE.open("a", encoding="utf-8") as f:
-    f.write(f"[PY] Auth OK to \\\\{host}\\{share}\n")
-    f.write("Python script ran successfully\n")
+    f.write(f"[PYTHON] Auth OK to \\\\{host}\\{share}\n")
+    f.write("[PYTHON] script ran successfully\n")
 
-print("[PY] Auth OK")
+print("[PYTHON] Auth OK")

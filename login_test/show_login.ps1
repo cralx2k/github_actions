@@ -8,8 +8,8 @@ $Domain     = $env:AUTH_DOMAIN
 $UserBase   = $env:GHA_USERNAME
 $Password   = $env:GHA_PASSWORD
 
-if ([string]::IsNullOrWhiteSpace($UserBase)) { Add-Content $LogFile "[PWSH] ERROR: GHA_USERNAME not set"; exit 1 }
-if ([string]::IsNullOrWhiteSpace($Password)) { Add-Content $LogFile "[PWSH] ERROR: GHA_PASSWORD not set"; exit 1 }
+if ([string]::IsNullOrWhiteSpace($UserBase)) { Add-Content $LogFile "[POWERSHELL] ERROR: GHA_USERNAME not set"; exit 1 }
+if ([string]::IsNullOrWhiteSpace($Password)) { Add-Content $LogFile "[POWERSHELL] ERROR: GHA_PASSWORD not set"; exit 1 }
 
 # Compose full username
 if (-not [string]::IsNullOrWhiteSpace($Domain) -and ($UserBase -notmatch '@')) {
@@ -18,9 +18,9 @@ if (-not [string]::IsNullOrWhiteSpace($Domain) -and ($UserBase -notmatch '@')) {
   $User = $UserBase
 }
 
-Write-Host "[PWSH] Local session user: $env:USERNAME"
+Write-Host "[POWERSHELL] Local session user: $env:USERNAME"
 $rootPath = "\\$HostName\$Share"
-Write-Host "[PWSH] Testing SMB auth to: $rootPath as $User"
+Write-Host "[POWERSHELL] Testing SMB auth to: $rootPath as $User"
 
 if ($Share -ieq 'IPC$') {
   # ---- IPC$ path: use cmdkey + probe (PSDrive won't work on IPC$) ----
@@ -31,14 +31,14 @@ if ($Share -ieq 'IPC$') {
     # Lightweight probe that requires auth
     $probe = & cmd.exe /c "dir \\$HostName\IPC$" 2>&1
     if ($LASTEXITCODE -ne 0) {
-      Add-Content $LogFile "[PWSH] Auth FAILED to \\$HostName\IPC$ (RC=$LASTEXITCODE) : $probe"
-      Write-Host  "[PWSH] Auth FAILED (RC=$LASTEXITCODE)"
+      Add-Content $LogFile "[POWERSHELL] Auth FAILED to \\$HostName\IPC$ (RC=$LASTEXITCODE) : $probe"
+      Write-Host  "[POWERSHELL] Auth FAILED (RC=$LASTEXITCODE)"
       exit $LASTEXITCODE
     }
 
-    Add-Content $LogFile "[PWSH] Auth OK to \\$HostName\IPC$"
-    Add-Content $LogFile "[PWSH] PowerShell script ran successfully"
-    Write-Host  "[PWSH] Auth OK"
+    Add-Content $LogFile "[POWERSHELL] Auth OK to \\$HostName\IPC$"
+    Add-Content $LogFile "[POWERSHELL] PowerShell script ran successfully"
+    Write-Host  "[POWERSHELL] Auth OK"
     exit 0
   }
   finally {
@@ -60,14 +60,14 @@ else {
     # Simple read probe
     $null = Get-ChildItem -LiteralPath $driveRoot -Force -ErrorAction Stop | Select-Object -First 1
 
-    Add-Content $LogFile "[PWSH] Auth OK to $rootPath"
-    Add-Content $LogFile "[PWSH] PowerShell script ran successfully"
-    Write-Host  "[PWSH] Auth OK"
+    Add-Content $LogFile "[POWERSHELL] Auth OK to $rootPath"
+    Add-Content $LogFile "[POWERSHELL] PowerShell script ran successfully"
+    Write-Host  "[POWERSHELL] Auth OK"
     exit 0
   }
   catch {
-    Add-Content $LogFile "[PWSH] Auth FAILED to $rootPath : $($_.Exception.Message)"
-    Write-Host  "[PWSH] Auth FAILED: $($_.Exception.Message)"
+    Add-Content $LogFile "[POWERSHELL] Auth FAILED to $rootPath : $($_.Exception.Message)"
+    Write-Host  "[POWERSHELL] Auth FAILED: $($_.Exception.Message)"
     exit 1
   }
   finally {
