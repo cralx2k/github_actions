@@ -1,10 +1,10 @@
-name: Verify Login Scripts (Batch only)
+name: Verify Login Scripts (BAT→PS + Python)
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - '**'
-  workflow_dispatch:
 
 jobs:
   verify-login:
@@ -12,29 +12,49 @@ jobs:
 
     env:
       TARGET_HOST: leaoserver
-      TARGET_SHARE: c              # <- your working share
-      AUTH_DOMAIN: ""              # e.g., CORP if needed; else ""
+      TARGET_SHARE: c
+      AUTH_DOMAIN: ""
       GHA_USERNAME: ${{ secrets.USERNAME }}
       GHA_PASSWORD: ${{ secrets.PASSWORD }}
 
     steps:
-      - name: Make log folder (cmd)
+      - name: Ensure log folder
         shell: cmd
-        run: |
-          if not exist C:\temp\action_log\ mkdir C:\temp\action_log\
+        run: if not exist C:\temp\action_log\ mkdir C:\temp\action_log\
 
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Reset log file (cmd)
+      - name: Reset log
         shell: cmd
-        run: |
-          > C:\temp\action_log\verify_login_script.txt echo [RUN] %DATE% %TIME% - fresh run
+        run: > C:\temp\action_log\verify_login_script.txt echo [RUN] %DATE% %TIME% - fresh run
 
-      - name: Run Batch login test (pure BAT)
+      - name: Run Batch (wrapper -> PowerShell)
         shell: cmd
         run: login_test\show_login.bat
+        timeout-minutes: 5
 
-      - name: Show log file (cmd)
-        shell: cmd
-        run: type C:\temp\action_log\verify_login_script.txt
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Run Python login test
+        shell: powershell
+        env:
+          TARGET_HOST: ${{ env.TARGET_HOST }}
+          TARGET_SHARE: ${{ env.TARGET_SHARE }}
+          AUTH_DOMAIN: ${{ env.AUTH_DOMAIN }}
+          GHA_USERNAME: ${{ secrets.USERNAME }}
+          GHA_PASSWORD: ${{ secrets.PASSWORD }}
+        run: python login_test\show_login.py
+
+      - name: Show log
+        shell: powershell
+        run: Get-Content C:\temp\action_log\verify_login_script.txt
+
+      - name: Upload log artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify_login_log
+          path: C:\temp\action_log\verify_login_script.txt
