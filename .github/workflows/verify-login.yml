@@ -27,7 +27,7 @@ jobs:
 
       - name: Reset log
         shell: cmd
-        run: > C:\temp\action_log\verify_login_script.txt echo [RUN] %DATE% %TIME% - fresh run
+        run: echo [RUN] %DATE% %TIME% - fresh run > C:\temp\action_log\verify_login_script.txt 
 
       - name: Run Batch (wrapper -> PowerShell)
         shell: cmd
