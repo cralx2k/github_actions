@@ -8,38 +8,39 @@ on:
 
 jobs:
   verify-login:
-    runs-on: [self-hosted, leaoserver] # Ensure this matches your runner label
+    runs-on: [self-hosted, leaoserver]
+
+    # Passed to all steps (scripts read these)
+    env:
+      TARGET_HOST: leaoserver
+      GHA_USERNAME: ${{ secrets.USERNAME }}
+      GHA_PASSWORD: ${{ secrets.PASSWORD }}
 
     steps:
       - name: Create temp folder
         shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force -Path "C:\temp"
+        run: New-Item -ItemType Directory -Force -Path "C:\temp\action_log\" | Out-Null
 
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Log computer name and timestamp
-        shell: pwsh
-        run: |
-          Add-Content -Path "C:\temp\verify_login_result.txt" -Value "Workflow run on $env:COMPUTERNAME at $(Get-Date)"
-
-      - name: Run Python login test
-        shell: pwsh
-        run: |
-          python login_test/show_login.py
-
       - name: Run Batch login test
         shell: cmd
-        run: |
-          login_test\show_login.bat
+        run: login_test\show_login.bat
 
       - name: Run PowerShell login test
         shell: pwsh
-        run: |
-          pwsh login_test/show_login.ps1
+        run: pwsh -File login_test/show_login.ps1
+
+      - name: Ensure Python is available (optional)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Run Python login test
+        shell: pwsh
+        run: python login_test/show_login.py
 
       - name: Show log file contents
         shell: pwsh
-        run: |
-          Get-Content "C:\temp\verify_login_result.txt"
+        run: Get-Content "C:\temp\action_log\verify_login_script.txt"
