@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Create temp folder
-        shell: pwsh
+        shell: PowerShell
         run: New-Item -ItemType Directory -Force -Path "C:\temp\action_log\" | Out-Null
 
       - name: Checkout repository
@@ -29,7 +29,7 @@ jobs:
         run: login_test\show_login.bat
 
       - name: Run PowerShell login test
-        shell: pwsh
+        shell: PowerShell
         run: pwsh -File login_test/show_login.ps1
 
       - name: Ensure Python is available (optional)
@@ -38,9 +38,9 @@ jobs:
           python-version: "3.10"
 
       - name: Run Python login test
-        shell: pwsh
+        shell: PowerShell
         run: python login_test/show_login.py
 
       - name: Show log file contents
-        shell: pwsh
+        shell: PowerShell
         run: Get-Content "C:\temp\action_log\verify_login_script.txt"
