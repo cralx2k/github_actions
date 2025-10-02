@@ -1,4 +1,5 @@
 @echo off
+setlocal DisableDelayedExpansion  && rem important for '!' in passwords
 setlocal ENABLEEXTENSIONS
 
 set "LOGFILE=C:\temp\action_log\verify_login_script.txt"
@@ -6,7 +7,7 @@ set "HOST=%TARGET_HOST%"
 set "SHARE=%TARGET_SHARE%"
 set "DOMAIN=%AUTH_DOMAIN%"
 
-if "%HOST%"=="" set "HOST=leaoserver"
+if "%HOST%"==""  set "HOST=leaoserver"
 if "%SHARE%"=="" set "SHARE=IPC$"
 
 if "%GHA_USERNAME%"=="" (
@@ -18,18 +19,30 @@ if "%GHA_PASSWORD%"=="" (
   exit /b 1
 )
 
-rem Compose user with optional domain
 set "USER_FOR_AUTH=%GHA_USERNAME%"
 if not "%DOMAIN%"=="" set "USER_FOR_AUTH=%DOMAIN%\%GHA_USERNAME%"
+
+rem ---- escape password for CMD metacharacters ----
+set "PWD_SAFE=%GHA_PASSWORD%"
+rem order matters; do '^' first
+set "PWD_SAFE=%PWD_SAFE:^=^^%"
+set "PWD_SAFE=%PWD_SAFE:&=^&%"
+set "PWD_SAFE=%PWD_SAFE:|=^|%"
+set "PWD_SAFE=%PWD_SAFE:<=^<%"
+set "PWD_SAFE=%PWD_SAFE:>=^>%"
+set "PWD_SAFE=%PWD_SAFE:)=^)%"
+set "PWD_SAFE=%PWD_SAFE:(=^(%"
+rem '!' is safe because DelayedExpansion is OFF
+set "PWD_SAFE=%PWD_SAFE:!=^^!%"
 
 echo [BATCH] Local session user: %USERNAME%
 echo [BATCH] Testing SMB auth to \\%HOST%\%SHARE% as %USER_FOR_AUTH%
 
-rem Ensure any stale mapping is cleared
+rem Clear any stale mapping
 net use \\%HOST%\%SHARE% /delete >nul 2>&1
 
-rem Attempt mapping (non-persistent)
-net use \\%HOST%\%SHARE% /user:%USER_FOR_AUTH% %GHA_PASSWORD% /persistent:no >nul 2>&1
+rem Use quotes around the (escaped) password
+net use \\%HOST%\%SHARE% /user:%USER_FOR_AUTH% "%PWD_SAFE%" /persistent:no >nul 2>&1
 set "RC=%ERRORLEVEL%"
 
 if %RC% NEQ 0 (
@@ -38,7 +51,7 @@ if %RC% NEQ 0 (
   exit /b %RC%
 )
 
-rem Cleanup the mapping after success
+rem Cleanup mapping
 net use \\%HOST%\%SHARE% /delete >nul 2>&1
 
 echo [BATCH] Auth OK to \\%HOST%\%SHARE% >> "%LOGFILE%"
